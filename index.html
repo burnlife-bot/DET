@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DET 어휘 학습</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <h1>DET 어휘 학습</h1>
+      <div class="topbar-right">
+        <div class="streak-badge" id="streak-badge">🔥 0일 연속</div>
+        <button class="icon-btn" id="btn-open-sync" title="기기 간 동기화 설정">⚙️</button>
+      </div>
+    </header>
+
+    <main id="app">
+
+      <!-- 대시보드 -->
+      <section id="view-dashboard" class="view">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-progress">0 / 0</div>
+            <div class="stat-label">전체 진도</div>
+          </div>
+          <div class="stat-card highlight-due">
+            <div class="stat-value" id="stat-due">0</div>
+            <div class="stat-label">오늘 복습할 단어</div>
+          </div>
+          <div class="stat-card highlight-mistake">
+            <div class="stat-value" id="stat-mistake">0</div>
+            <div class="stat-label">오답노트</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-streak">0일</div>
+            <div class="stat-label">연속 학습</div>
+          </div>
+        </div>
+
+        <div class="action-list">
+          <button id="btn-start-learn" class="action-btn primary">
+            <span class="action-title">새 단어 학습 시작</span>
+            <span class="action-sub" id="btn-learn-sub">10개씩 새로운 단어를 배웁니다</span>
+          </button>
+          <button id="btn-start-review" class="action-btn">
+            <span class="action-title">오늘 복습 시작</span>
+            <span class="action-sub" id="btn-review-sub">간격 반복으로 복습할 단어</span>
+          </button>
+          <button id="btn-start-mistakes" class="action-btn danger">
+            <span class="action-title">오답노트 복습</span>
+            <span class="action-sub" id="btn-mistakes-sub">자주 틀리는 단어 집중 복습</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 신규 단어 학습 -->
+      <section id="view-learn" class="view hidden">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="learn-progress-bar"></div>
+        </div>
+        <p class="progress-text" id="learn-progress-text">1 / 10</p>
+
+        <div class="word-card">
+          <div class="word-head">
+            <h2 class="word-en" id="learn-word"></h2>
+            <button class="tts-btn" id="learn-tts-word" title="단어 발음 듣기">🔊</button>
+          </div>
+          <div class="word-pos" id="learn-pos"></div>
+          <div class="word-meaning" id="learn-meaning"></div>
+          <div class="example-box">
+            <p class="example-en" id="learn-example"></p>
+            <button class="tts-btn small" id="learn-tts-example" title="예문 듣기">🔊 예문 듣기</button>
+          </div>
+        </div>
+
+        <button id="btn-learn-next" class="action-btn primary full">다음</button>
+      </section>
+
+      <!-- 퀴즈 (학습 직후 테스트 / 오늘 복습 / 오답노트 복습 공용) -->
+      <section id="view-quiz" class="view hidden">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="quiz-progress-bar"></div>
+        </div>
+        <p class="progress-text" id="quiz-progress-text">1 / 10</p>
+        <p class="quiz-mode-label" id="quiz-mode-label"></p>
+
+        <div class="quiz-card" id="quiz-card">
+          <!-- quiz.js가 문제 유형에 따라 내용을 채움 -->
+        </div>
+
+        <div class="feedback-box hidden" id="quiz-feedback"></div>
+
+        <button id="btn-quiz-check" class="action-btn primary full">정답 확인</button>
+        <button id="btn-quiz-next" class="action-btn primary full hidden">다음 문제</button>
+      </section>
+
+      <!-- 세션 요약 -->
+      <section id="view-summary" class="view hidden">
+        <div class="summary-card">
+          <h2 id="summary-title">학습 완료!</h2>
+          <div class="summary-stats">
+            <div class="summary-stat">
+              <span class="summary-num" id="summary-correct">0</span>
+              <span class="summary-label">정답</span>
+            </div>
+            <div class="summary-stat">
+              <span class="summary-num" id="summary-wrong">0</span>
+              <span class="summary-label">오답</span>
+            </div>
+          </div>
+          <ul class="summary-wrong-list" id="summary-wrong-list"></ul>
+        </div>
+        <button id="btn-summary-home" class="action-btn primary full">대시보드로</button>
+      </section>
+
+      <!-- 동기화 설정 -->
+      <section id="view-sync" class="view hidden">
+        <div class="word-card">
+          <h2 style="margin-top:0">기기 간 동기화</h2>
+          <p class="quiz-sub" id="sync-status">연결 안 됨 — 이 기기에만 진도가 저장됩니다</p>
+
+          <div id="sync-code-display" class="hidden">
+            <p class="word-meaning" style="font-size:15px;word-break:break-all" id="sync-code-text"></p>
+            <button class="action-btn" id="btn-copy-sync-code">코드 복사</button>
+          </div>
+
+          <div class="sync-section">
+            <p class="quiz-sub" style="margin-bottom:8px">
+              처음 설정하는 기기라면 — 먼저
+              <a href="https://github.com/settings/tokens/new?scopes=gist&description=DET%20%EB%8B%A8%EC%96%B4%EC%9E%A5%20%EB%8F%99%EA%B8%B0%ED%99%94" target="_blank" rel="noopener">GitHub 토큰 발급 페이지</a>에서
+              <b>gist</b> 권한만 체크하고 발급받은 토큰을 아래에 붙여넣으세요.
+            </p>
+            <input type="text" class="quiz-input" id="sync-token-input" placeholder="GitHub 토큰 (ghp_...) 붙여넣기" autocomplete="off" />
+            <button class="action-btn primary full" id="btn-create-sync-code">새 동기화 코드 만들기</button>
+          </div>
+
+          <div class="sync-section">
+            <p class="quiz-sub" style="margin-bottom:8px">다른 기기에서 받은 동기화 코드가 있다면:</p>
+            <input type="text" class="quiz-input" id="sync-code-input" placeholder="동기화 코드 붙여넣기" autocomplete="off" />
+            <button class="action-btn primary full" id="btn-connect-sync-code">코드로 연결하기</button>
+          </div>
+
+          <p class="quiz-sub" style="margin-top:16px">
+            ⓘ 동기화 코드에는 GitHub 토큰이 포함되어 있어요. 가족 외에는 공유하지 마시고,
+            더 이상 필요 없으면 <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a>에서 언제든 폐기할 수 있습니다.
+          </p>
+
+          <button class="action-btn danger full hidden" id="btn-disconnect-sync">동기화 해제</button>
+        </div>
+        <button id="btn-sync-back" class="action-btn full">대시보드로</button>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="data/words.js"></script>
+  <script src="js/tts.js"></script>
+  <script src="js/srs.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
