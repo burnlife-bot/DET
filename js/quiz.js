@@ -45,6 +45,15 @@ window.DET = window.DET || {};
     return escapeHtml(sentence).replace(re, "<b>$1</b>");
   }
 
+  function posPrefix(word) {
+    return word.pos ? escapeHtml(word.pos) + " · " : "";
+  }
+
+  // 예문 속에 단어가 그대로 들어 있어야 빈칸 문제로 낼 수 있음
+  function canFillBlank(word) {
+    return !!word.example_en && new RegExp(`\\b${escapeRegExp(word.word)}\\b`, "i").test(word.example_en);
+  }
+
   function wireOptionClicks(container, onSelect) {
     container.querySelectorAll(".quiz-option").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -76,7 +85,7 @@ window.DET = window.DET || {};
       render(container) {
         container.innerHTML = `
           <p class="quiz-question">${escapeHtml(word.word)}</p>
-          <p class="quiz-sub">${escapeHtml(word.pos)} · 알맞은 뜻을 고르세요</p>
+          <p class="quiz-sub">${posPrefix(word)}알맞은 뜻을 고르세요</p>
           <div class="quiz-options">
             ${options.map((opt) => `<button type="button" class="quiz-option" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`).join("")}
           </div>`;
@@ -102,7 +111,7 @@ window.DET = window.DET || {};
       render(container) {
         container.innerHTML = `
           <p class="quiz-question">${escapeHtml(word.meaning_kr)}</p>
-          <p class="quiz-sub">${escapeHtml(word.pos)} · 알맞은 영어 단어를 입력하세요</p>
+          <p class="quiz-sub">${posPrefix(word)}알맞은 영어 단어를 입력하세요</p>
           <input type="text" class="quiz-input" id="quiz-text-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="영어 단어 입력" />`;
         const input = container.querySelector("#quiz-text-input");
         input.focus();
@@ -215,7 +224,8 @@ window.DET = window.DET || {};
   }
 
   function createQuestion(word, allWords) {
-    const types = ["mc-meaning", "spelling", "fill-blank"];
+    const types = ["mc-meaning", "spelling"];
+    if (canFillBlank(word)) types.push("fill-blank");
     if (isTTSSupported()) types.push("listening-choice", "listening-spelling");
     const type = types[Math.floor(Math.random() * types.length)];
     switch (type) {
@@ -232,5 +242,5 @@ window.DET = window.DET || {};
     }
   }
 
-  window.DET.quiz = { createQuestion, highlightWord };
+  window.DET.quiz = { createQuestion, highlightWord, escapeHtml };
 })();

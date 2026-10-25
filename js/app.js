@@ -2,6 +2,7 @@
 (function () {
   const {
     loadState,
+    isCurrentDataset,
     adoptState,
     setOnChange,
     getNextNewBatch,
@@ -13,7 +14,7 @@
   } = window.DET.storage;
   const { sortReviewQueue } = window.DET.srs;
   const { renderDashboard } = window.DET.dashboard;
-  const { createQuestion, highlightWord } = window.DET.quiz;
+  const { createQuestion, highlightWord, escapeHtml } = window.DET.quiz;
   const { speak, isTTSSupported } = window.DET.tts;
   const sync = window.DET.sync;
 
@@ -63,7 +64,7 @@
     if (!code) return;
     try {
       const remote = await sync.pullState(code);
-      if (remote && remote.meta && (!state.meta.updatedAt || remote.meta.updatedAt > state.meta.updatedAt)) {
+      if (isCurrentDataset(remote) && (!state.meta.updatedAt || remote.meta.updatedAt > state.meta.updatedAt)) {
         state = remote;
         adoptState(state);
       } else {
@@ -129,7 +130,7 @@
     try {
       const remote = await sync.pullState(code);
       sync.setSyncCode(code);
-      if (remote) {
+      if (isCurrentDataset(remote)) {
         state = remote;
         adoptState(state);
       } else {
@@ -188,9 +189,16 @@
   function renderLearnCard() {
     const word = session.words[session.index];
     document.getElementById("learn-word").textContent = word.word;
-    document.getElementById("learn-pos").textContent = word.pos;
+    document.getElementById("learn-pos").textContent = [word.pron, word.pos].filter(Boolean).join("  ");
     document.getElementById("learn-meaning").textContent = word.meaning_kr;
-    document.getElementById("learn-example").innerHTML = highlightWord(word.example_en, word.word);
+
+    const noteEl = document.getElementById("learn-note");
+    noteEl.textContent = word.note || "";
+    noteEl.classList.toggle("hidden", !word.note);
+
+    const hasExample = !!word.example_en;
+    document.getElementById("learn-example-box").classList.toggle("hidden", !hasExample);
+    if (hasExample) document.getElementById("learn-example").innerHTML = highlightWord(word.example_en, word.word);
     updateProgress("learn", session.index, session.words.length);
     document.getElementById("btn-learn-next").textContent =
       session.index === session.words.length - 1 ? "테스트 시작하기" : "다음 단어";
@@ -263,9 +271,11 @@
     const fb = document.getElementById("quiz-feedback");
     fb.classList.remove("hidden", "correct", "incorrect");
     fb.classList.add(result.correct ? "correct" : "incorrect");
+    const extra = word.example_en ? highlightWord(word.example_en, word.word) : escapeHtml(word.note || "");
+    const extraHtml = extra ? `<span class="fb-example">${extra}</span>` : "";
     fb.innerHTML = result.correct
-      ? `정답입니다! <span class="fb-example">${highlightWord(word.example_en, word.word)}</span>`
-      : `오답입니다. 정답: <b>${result.correctText}</b><span class="fb-example">${highlightWord(word.example_en, word.word)}</span>`;
+      ? `정답입니다! ${extraHtml}`
+      : `오답입니다. 정답: <b>${escapeHtml(result.correctText)}</b>${extraHtml}`;
 
     document.getElementById("btn-quiz-check").classList.add("hidden");
     const nextBtn = document.getElementById("btn-quiz-next");

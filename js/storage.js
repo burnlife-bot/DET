@@ -18,6 +18,7 @@ window.DET = window.DET || {};
         streakDays: 0,
         lastStudyDate: null,
         updatedAt: 0,
+        datasetId: window.DET_DATASET || null,
       },
     };
   }
@@ -34,11 +35,17 @@ window.DET = window.DET || {};
     };
   }
 
+  function isCurrentDataset(state) {
+    return !!state && !!state.meta && state.meta.datasetId === (window.DET_DATASET || null);
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaultState();
       const parsed = JSON.parse(raw);
+      // 단어장이 교체되면 이전 단어장의 진도는 의미가 없으므로 새로 시작
+      if (!isCurrentDataset(parsed)) return defaultState();
       return {
         words: parsed.words || {},
         meta: { ...defaultState().meta, ...(parsed.meta || {}) },
@@ -141,6 +148,7 @@ window.DET = window.DET || {};
 
   window.DET.storage = {
     loadState,
+    isCurrentDataset,
     saveState,
     adoptState,
     setOnChange,

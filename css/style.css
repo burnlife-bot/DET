@@ -283,6 +283,13 @@ body {
   margin-top: 10px;
 }
 
+.word-note {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 .example-box {
   margin-top: 18px;
   padding-top: 16px;
