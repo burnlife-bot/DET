@@ -277,6 +277,15 @@
       ? `정답입니다! ${extraHtml}`
       : `오답입니다. 정답: <b>${escapeHtml(result.correctText)}</b>${extraHtml}`;
 
+    if (word.example_en && isTTSSupported()) {
+      const ttsBtn = document.createElement("button");
+      ttsBtn.type = "button";
+      ttsBtn.className = "tts-btn small";
+      ttsBtn.textContent = "🔊 예문 듣기";
+      ttsBtn.addEventListener("click", () => speak(word.example_en));
+      fb.appendChild(ttsBtn);
+    }
+
     document.getElementById("btn-quiz-check").classList.add("hidden");
     const nextBtn = document.getElementById("btn-quiz-next");
     nextBtn.classList.remove("hidden");
